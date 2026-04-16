@@ -233,15 +233,23 @@ const Me = {
     const celebrated = pip.celebratedMilestones || [];
     const all = this.getAllMilestones(days);
 
-    all.forEach(m => {
-      if (days >= m.days && !celebrated.includes(m.days)) {
-        celebrated.push(m.days);
-        pip.celebratedMilestones = celebrated;
-        Storage.savePip(pip);
-        Pip.celebrate();
-        this.showMilestoneCelebration(m);
-      }
-    });
+    // Find every milestone the user has reached that has not yet been celebrated.
+    // getAllMilestones returns ascending by days, so this stays sorted.
+    const newlyPassed = all.filter(m => days >= m.days && !celebrated.includes(m.days));
+    if (newlyPassed.length === 0) return;
+
+    // Silently mark ALL newly passed milestones as celebrated. This catches up
+    // a user who sets a sobriety date that has already passed several chips.
+    newlyPassed.forEach(m => celebrated.push(m.days));
+    pip.celebratedMilestones = celebrated;
+    Storage.savePip(pip);
+
+    // Only the highest one they have actually reached triggers the visual.
+    // Future milestones (when days crosses them one at a time) will fire normally
+    // because this path only produces a single-element newlyPassed in that case.
+    const highest = newlyPassed[newlyPassed.length - 1];
+    Pip.celebrate();
+    this.showMilestoneCelebration(highest);
   },
 
   showMilestoneCelebration(milestone) {
