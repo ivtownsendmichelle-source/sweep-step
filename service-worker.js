@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sweepstep-v1';
+const CACHE_NAME = 'sweepstep-v4';
 const ASSETS = [
   '/',
   '/index.html',
@@ -14,6 +14,9 @@ const ASSETS = [
   '/js/me.js',
   '/js/quotes.js',
   '/js/storage.js',
+  '/js/patterns.js',
+  '/js/promises.js',
+  '/js/beliefs.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png'
 ];

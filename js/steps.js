@@ -3,7 +3,7 @@ const Steps = {
   data: null,
 
   descriptions: [
-    "We admitted we were powerless over our addiction — that our lives had become unmanageable.",
+    "We admitted we were powerless over our addiction. That our lives had become unmanageable.",
     "Came to believe that a power greater than ourselves could restore us to sanity.",
     "Made a decision to turn our will and our lives over to the care of our Higher Power as we understood it.",
     "Made a searching and fearless moral inventory of ourselves.",
@@ -40,9 +40,9 @@ const Steps = {
       card.className = `step-card step-${step.status}`;
 
       const statusLabel = {
-        not_started: 'Not Started',
-        in_progress: 'In Progress',
-        complete: 'Complete'
+        not_started: 'Not started',
+        in_progress: 'Working on it',
+        complete: 'Done'
       }[step.status];
 
       const desc = this.descriptions[i].replace(/Higher Power/g, hpName);
@@ -51,15 +51,15 @@ const Steps = {
         <div class="step-badge step-badge-${step.status}">${step.step}</div>
         <div class="step-content">
           <div class="step-header">
-            <h3 class="step-title">Step ${step.step}: ${this.principles[i]}</h3>
+            <h3 class="step-title">Step ${step.step}. ${this.principles[i]}.</h3>
             <span class="step-status-label step-status-${step.status}">${statusLabel}</span>
           </div>
           <p class="step-description">${desc}</p>
-          ${step.dateStarted ? `<p class="step-date">Started: ${new Date(step.dateStarted).toLocaleDateString()}</p>` : ''}
-          ${step.dateCompleted ? `<p class="step-date">Completed: ${new Date(step.dateCompleted).toLocaleDateString()}</p>` : ''}
+          ${step.dateStarted ? `<p class="step-date">Started ${new Date(step.dateStarted).toLocaleDateString()}</p>` : ''}
+          ${step.dateCompleted ? `<p class="step-date">Done ${new Date(step.dateCompleted).toLocaleDateString()}</p>` : ''}
           <div class="step-actions">
-            ${step.status === 'not_started' ? `<button class="btn-small btn-primary" onclick="Steps.setStatus(${i}, 'in_progress')">Begin Step</button>` : ''}
-            ${step.status === 'in_progress' ? `<button class="btn-small btn-primary" onclick="Steps.setStatus(${i}, 'complete')">Mark Complete</button><button class="btn-small btn-secondary" onclick="Steps.setStatus(${i}, 'not_started')">Reset</button>` : ''}
+            ${step.status === 'not_started' ? `<button class="btn-small btn-primary" onclick="Steps.setStatus(${i}, 'in_progress')">Start</button>` : ''}
+            ${step.status === 'in_progress' ? `<button class="btn-small btn-primary" onclick="Steps.setStatus(${i}, 'complete')">Mark done</button><button class="btn-small btn-secondary" onclick="Steps.setStatus(${i}, 'not_started')">Reset</button>` : ''}
             ${step.status === 'complete' ? `<button class="btn-small btn-secondary" onclick="Steps.setStatus(${i}, 'in_progress')">Reopen</button>` : ''}
             <button class="btn-small btn-secondary" onclick="Steps.openNotes(${i})">Notes</button>
           </div>
@@ -71,7 +71,6 @@ const Steps = {
 
   setStatus(index, status) {
     const step = this.data[index];
-    const oldStatus = step.status;
     step.status = status;
 
     if (status === 'in_progress' && !step.dateStarted) {
@@ -82,6 +81,7 @@ const Steps = {
       step.dateCompleted = new Date().toISOString();
       Pip.addScore(20);
       Pip.celebrate();
+      Pip.showNote(Pip.getResponse('step', step.step));
     }
     if (status === 'not_started') {
       step.dateStarted = null;
@@ -90,20 +90,25 @@ const Steps = {
 
     Storage.saveSteps(this.data);
     this.render();
+
+    // Step 12 complete → offer promises retake
+    if (status === 'complete' && step.step === 12 && typeof Promises !== 'undefined') {
+      setTimeout(() => Promises.offerEndAssessment(), 1500);
+    }
   },
 
   openNotes(index) {
     const step = this.data[index];
     const body = `
-      <label class="field-label">Your notes for Step ${step.step}
-        <textarea id="step-notes" class="input-field" rows="6" placeholder="Reflections, insights, experiences with this step...">${this.esc(step.notes)}</textarea>
+      <label class="field-label">Notes on Step ${step.step}
+        <textarea id="step-notes" class="input-field" rows="6" placeholder="Anything you want to remember">${this.esc(step.notes)}</textarea>
       </label>
     `;
     const footer = `
       <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
       <button class="btn-primary btn-small" onclick="Steps.saveNotes(${index})">Save</button>
     `;
-    App.openModal(`Step ${step.step} Notes`, body, footer);
+    App.openModal(`Step ${step.step} notes`, body, footer);
   },
 
   saveNotes(index) {

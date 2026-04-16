@@ -19,8 +19,8 @@ const SexInventory = {
 
     if (this.data.length === 0) {
       container.innerHTML = `<div class="empty-state">
-        <p>No relationships examined yet.</p>
-        <p class="text-secondary">This is a space to honestly look at your relationships — past and present — with compassion for yourself and others.</p>
+        <p>Nothing here yet.</p>
+        <p class="text-secondary">An honest look at who you've been with. Past and present. No edits.</p>
       </div>`;
       return;
     }
@@ -73,11 +73,11 @@ const SexInventory = {
     const body = `
       <div class="guidance-box">
         <div class="guidance-header" onclick="this.parentElement.classList.toggle('open')">
-          <span>Guidance</span>
+          <span>How this works</span>
           <span class="guidance-chevron">▼</span>
         </div>
         <div class="guidance-body">
-          <p>Look at each significant relationship honestly. This is about understanding your patterns — not about blame or shame. Use gender-neutral language. Every relationship deserves the same honest examination.</p>
+          <p>One relationship per card. Write what actually happened, not the version you tell at dinner. You're not in court. Nobody is grading this. The point is to see your patterns so you stop repeating them.</p>
         </div>
       </div>
 
@@ -93,72 +93,72 @@ const SexInventory = {
       </label>
 
       <div class="column-section">
-        <div class="column-label">History & Context</div>
+        <div class="column-label">The story</div>
 
-        <label class="field-label">Brief history: what drew you together, how it started
+        <label class="field-label">How it started. What pulled you in.
           <textarea id="sex-history" class="input-field" rows="3">${this.esc(entry.history)}</textarea>
         </label>
 
-        <label class="field-label">What were your motives in this relationship?
+        <label class="field-label">What you were actually after
           <textarea id="sex-motives" class="input-field" rows="2">${this.esc(entry.motives)}</textarea>
         </label>
 
-        <label class="field-label">How did you conduct yourself?
+        <label class="field-label">How you acted
           <textarea id="sex-conduct" class="input-field" rows="2">${this.esc(entry.conduct)}</textarea>
         </label>
 
-        <label class="field-label">Major points — turning moments, key events
+        <label class="field-label">The moments that mattered
           <textarea id="sex-major" class="input-field" rows="2">${this.esc(entry.majorPoints)}</textarea>
         </label>
 
-        <label class="field-label">How did it end, or where is it now?
+        <label class="field-label">How it ended or where it is now
           <textarea id="sex-ended" class="input-field" rows="2">${this.esc(entry.howEnded)}</textarea>
         </label>
       </div>
 
       <div class="column-section">
-        <div class="column-label">Honest Examination</div>
+        <div class="column-label">Your part</div>
 
-        <label class="field-label">Where was I selfish?
+        <label class="field-label">Where were you selfish
           <textarea id="sex-selfish" class="input-field" rows="2">${this.esc(entry.selfish)}</textarea>
         </label>
 
-        <label class="field-label">Where was I dishonest?
+        <label class="field-label">Where were you dishonest
           <textarea id="sex-dishonest" class="input-field" rows="2">${this.esc(entry.dishonest)}</textarea>
         </label>
 
-        <label class="field-label">Where was I inconsiderate?
+        <label class="field-label">Where were you inconsiderate
           <textarea id="sex-inconsiderate" class="input-field" rows="2">${this.esc(entry.inconsiderate)}</textarea>
         </label>
 
-        <label class="field-label">Whom did I hurt?
+        <label class="field-label">Who got hurt
           <textarea id="sex-hurt" class="input-field" rows="2">${this.esc(entry.whomDidIHurt)}</textarea>
         </label>
 
-        <label class="field-label">Did I unjustifiably arouse jealousy?
+        <label class="field-label">Did you make them jealous on purpose
           <textarea id="sex-jealousy" class="input-field" rows="2">${this.esc(entry.jealousy)}</textarea>
         </label>
 
-        <label class="field-label">Did I unjustifiably arouse suspicion?
+        <label class="field-label">Did you make them suspicious on purpose
           <textarea id="sex-suspicion" class="input-field" rows="2">${this.esc(entry.suspicion)}</textarea>
         </label>
 
-        <label class="field-label">Where was I bitter?
+        <label class="field-label">Where were you bitter
           <textarea id="sex-bitterness" class="input-field" rows="2">${this.esc(entry.bitterness)}</textarea>
         </label>
 
-        <label class="field-label">Where was I at fault?
+        <label class="field-label">Where were you at fault
           <textarea id="sex-fault" class="input-field" rows="2">${this.esc(entry.atFault)}</textarea>
         </label>
 
-        <label class="field-label">What should I have done instead?
+        <label class="field-label">What should you have done instead
           <textarea id="sex-should" class="input-field" rows="2">${this.esc(entry.whatShouldIDo)}</textarea>
         </label>
       </div>
 
       <div class="column-section">
         <div class="column-label">Harm</div>
-        <label class="field-label">What harm did I cause in this relationship?
+        <label class="field-label">What harm did you cause
           <textarea id="sex-harm" class="input-field" rows="3">${this.esc(entry.harm)}</textarea>
         </label>
       </div>
@@ -207,12 +207,13 @@ const SexInventory = {
 
     Storage.saveSexInventory(this.data);
     Pip.addScore(10);
+    if (isNew) Pip.showNote(Pip.getResponse('sex'));
     App.closeModal();
     this.render();
   },
 
   delete(id) {
-    if (!confirm('Remove this relationship entry?')) return;
+    if (!confirm('Remove this entry?')) return;
     this.data = this.data.filter(e => e.id !== id);
     Storage.saveSexInventory(this.data);
     this.render();

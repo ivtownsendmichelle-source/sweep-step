@@ -10,7 +10,14 @@ const Storage = {
     contacts: 'sweepstep_contacts',
     gratitude: 'sweepstep_gratitude',
     settings: 'sweepstep_settings',
-    pip: 'sweepstep_pip'
+    pip: 'sweepstep_pip',
+    intentions: 'sweepstep_intentions',
+    beliefs: 'sweepstep_beliefs',
+    promisesStart: 'sweepstep_promisesAssessmentStart',
+    promisesEnd: 'sweepstep_promisesAssessmentEnd',
+    sponsorCheckins: 'sweepstep_sponsor_checkins',
+    streaks: 'sweepstep_streaks',
+    patternsSeen: 'sweepstep_patterns_seen'
   },
 
   get(key) {
@@ -66,15 +73,80 @@ const Storage = {
   getSettings() {
     return this.get('settings') || {
       name: '', pronouns: '', hpName: 'Higher Power', accentColor: 'violet',
-      sobrietyDate: null, sponsorName: '', sponsorPhone: ''
+      sobrietyDate: null, sponsorName: '', sponsorPhone: '',
+      onboardingComplete: false, pinHash: null, pinSalt: null,
+      firstOpenDate: null
     };
   },
   saveSettings(d) { this.set('settings', d); },
 
   getPip() {
-    return this.get('pip') || { score: 0, lastActivity: new Date().toISOString(), celebratedMilestones: [] };
+    return this.get('pip') || {
+      score: 0, lastActivity: new Date().toISOString(),
+      celebratedMilestones: [], openStreak: 0, lastOpenDate: null,
+      sevenDayNoticed: false
+    };
   },
   savePip(d) { this.set('pip', d); },
+
+  /* Daily intentions — stored by date YYYY-MM-DD */
+  getIntentions() { return this.get('intentions') || {}; },
+  saveIntentions(d) { this.set('intentions', d); },
+  getIntentionFor(dateStr) {
+    const all = this.getIntentions();
+    return all[dateStr] || '';
+  },
+  setIntentionFor(dateStr, text) {
+    const all = this.getIntentions();
+    all[dateStr] = text;
+    this.saveIntentions(all);
+  },
+
+  /* Belief assessments — array of snapshots with timestamp */
+  getBeliefs() { return this.get('beliefs') || []; },
+  saveBeliefs(d) { this.set('beliefs', d); },
+  addBeliefSnapshot(ratings) {
+    const arr = this.getBeliefs();
+    arr.push({ date: new Date().toISOString(), ratings: ratings });
+    this.saveBeliefs(arr);
+    return arr.length;
+  },
+
+  /* Promises */
+  getPromisesStart() { return this.get('promisesStart'); },
+  savePromisesStart(ratings) {
+    this.set('promisesStart', { date: new Date().toISOString(), ratings });
+  },
+  getPromisesEnd() { return this.get('promisesEnd'); },
+  savePromisesEnd(ratings) {
+    this.set('promisesEnd', { date: new Date().toISOString(), ratings });
+  },
+
+  /* Sponsor check-ins — array of YYYY-MM-DD dates */
+  getSponsorCheckins() { return this.get('sponsorCheckins') || []; },
+  saveSponsorCheckins(d) { this.set('sponsorCheckins', d); },
+  addSponsorCheckin() {
+    const today = new Date().toISOString().split('T')[0];
+    const arr = this.getSponsorCheckins();
+    if (!arr.includes(today)) {
+      arr.push(today);
+      this.saveSponsorCheckins(arr);
+    }
+    return arr;
+  },
+
+  /* Streaks cache (computed + flagged) */
+  getStreaks() {
+    return this.get('streaks') || {
+      sponsor: { current: 0, last: null },
+      meeting: { current: 0, last: null }
+    };
+  },
+  saveStreaks(d) { this.set('streaks', d); },
+
+  /* Patterns seen (track which crossover names we've highlighted) */
+  getPatternsSeen() { return this.get('patternsSeen') || []; },
+  savePatternsSeen(d) { this.set('patternsSeen', d); },
 
   exportAll() {
     const data = {};
@@ -83,7 +155,7 @@ const Storage = {
       if (raw) data[name] = JSON.parse(raw);
     }
     data._exportDate = new Date().toISOString();
-    data._appVersion = '1.0.0';
+    data._appVersion = '2.0.0';
     return data;
   },
 

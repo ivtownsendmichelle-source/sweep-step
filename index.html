@@ -17,30 +17,96 @@
 </head>
 <body>
 
-  <!-- Persistent Mini Pip -->
-  <div id="pip-mini" class="pip-mini" aria-label="Pip, your recovery companion"></div>
+  <!-- ═══ ONBOARDING ═══ -->
+  <section id="screen-onboarding" class="screen">
+    <div class="screen-content onboarding">
+      <div id="onboard-host"></div>
+    </div>
+  </section>
+
+  <!-- ═══ PIN ═══ -->
+  <section id="screen-pin" class="screen">
+    <div class="screen-content pin-screen">
+      <h1 class="app-title" style="font-size:28px;">Sweep Step</h1>
+      <h2 id="pin-title" class="pin-title">Set a PIN</h2>
+      <p id="pin-subtitle" class="pin-subtitle">4 to 6 digits</p>
+
+      <div class="pin-dots" id="pin-dots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+
+      <div id="pin-error" class="pin-error hidden"></div>
+
+      <div class="pin-keypad" id="pin-keypad">
+        <button class="pin-key" data-key="1">1</button>
+        <button class="pin-key" data-key="2">2</button>
+        <button class="pin-key" data-key="3">3</button>
+        <button class="pin-key" data-key="4">4</button>
+        <button class="pin-key" data-key="5">5</button>
+        <button class="pin-key" data-key="6">6</button>
+        <button class="pin-key" data-key="7">7</button>
+        <button class="pin-key" data-key="8">8</button>
+        <button class="pin-key" data-key="9">9</button>
+        <button class="pin-key pin-key-empty"></button>
+        <button class="pin-key" data-key="0">0</button>
+        <button class="pin-key pin-key-back" data-key="back" aria-label="Delete">&#9003;</button>
+      </div>
+
+      <button class="btn-primary pin-submit hidden" id="pin-submit">Confirm</button>
+
+      <div id="pin-setup-warning" class="pin-warning hidden">
+        <label class="pin-warning-label">
+          <input type="checkbox" id="pin-understand">
+          I get it. If I forget this PIN, there is no recovery. The data is gone.
+        </label>
+      </div>
+
+      <button id="pin-skip" class="btn-secondary" style="margin-top:16px;">Skip</button>
+
+      <p class="privacy-notice" style="margin-top:24px;">Everything you enter stays on your device. Nothing is ever sent anywhere.</p>
+
+      <div id="pin-lockout" class="pin-lockout hidden">
+        <p>Too many tries.</p>
+        <p id="pin-lockout-timer"></p>
+      </div>
+    </div>
+  </section>
 
   <!-- ═══ HOME ═══ -->
   <section id="screen-home" class="screen active">
     <div class="screen-content">
       <div class="home-header">
         <h1 class="app-title">Sweep Step</h1>
+        <p class="home-hi" id="home-hi"></p>
         <p class="home-date" id="home-date"></p>
         <p class="home-sobriety" id="home-sobriety"></p>
+      </div>
+
+      <!-- Daily Intention -->
+      <div class="daily-card daily-intention-card">
+        <div class="card-label">Today's intention</div>
+        <textarea id="daily-intention-input" class="input-field daily-intention-input" rows="2"
+          placeholder="What do you want to be true about today?"></textarea>
       </div>
 
       <div id="pip-stage" class="pip-container">
         <div id="pip-character" class="pip" data-stage="1"></div>
         <div id="pip-status" class="pip-status-text"></div>
       </div>
+      <div class="pip-voice" id="pip-voice"></div>
       <div class="pip-score-bar">
         <div class="pip-score-fill" id="pip-score-fill"></div>
         <span class="pip-score-label" id="pip-score-label"></span>
       </div>
-      <p id="pip-miss-msg" class="pip-miss hidden">Pip misses you. Come back and sweep a little today.</p>
+      <p id="pip-miss-msg" class="pip-miss hidden">Pip's been waiting. No rush.</p>
 
       <div class="daily-card">
-        <div class="card-label">Daily Quote</div>
+        <div class="card-label">Daily quote</div>
         <p id="daily-quote" class="quote-text"></p>
       </div>
 
@@ -57,7 +123,7 @@
   <section id="screen-work" class="screen">
     <div class="screen-content">
       <h2 class="screen-title">The Work</h2>
-      <p class="screen-subtitle">Fourth Step Inventory</p>
+      <p class="screen-subtitle">Fourth Step</p>
 
       <div class="work-tabs" role="tablist">
         <button class="work-tab active" data-tab="resentments" role="tab">Resentments</button>
@@ -68,25 +134,25 @@
 
       <div id="tab-resentments" class="work-tab-content active" role="tabpanel">
         <div id="inventory-list" class="card-list"></div>
-        <button id="btn-new-resentment" class="btn-primary btn-glow">+ New Resentment</button>
+        <button id="btn-new-resentment" class="btn-primary btn-glow">+ New resentment</button>
       </div>
 
       <div id="tab-fears" class="work-tab-content" role="tabpanel">
-        <p class="tab-desc">Fears collected from your inventory, plus any you add manually. Chain each fear to its root.</p>
+        <p class="tab-desc">Fears pulled from your inventory, plus anything you add yourself. Chain each one to its root.</p>
         <div id="fears-list" class="card-list"></div>
-        <button id="btn-add-fear" class="btn-primary btn-glow">+ Add Fear</button>
+        <button id="btn-add-fear" class="btn-primary btn-glow">+ Add fear</button>
       </div>
 
       <div id="tab-sex" class="work-tab-content" role="tabpanel">
-        <p class="tab-desc">Examine your relationships with honesty and compassion.</p>
+        <p class="tab-desc">An honest look at who you've been with. One card per person.</p>
         <div id="sex-inventory-list" class="card-list"></div>
-        <button id="btn-add-sex" class="btn-primary btn-glow">+ New Relationship</button>
+        <button id="btn-add-sex" class="btn-primary btn-glow">+ New relationship</button>
       </div>
 
       <div id="tab-harms" class="work-tab-content" role="tabpanel">
-        <p class="tab-desc">All harms from your inventory, plus any you want to add directly.</p>
+        <p class="tab-desc">Harms from your inventory. Plus any you want to add directly.</p>
         <div id="harms-list" class="card-list"></div>
-        <button id="btn-add-harm" class="btn-primary btn-glow">+ Add Harm</button>
+        <button id="btn-add-harm" class="btn-primary btn-glow">+ Add harm</button>
       </div>
     </div>
   </section>
@@ -95,7 +161,7 @@
   <section id="screen-steps" class="screen">
     <div class="screen-content">
       <h2 class="screen-title">The Steps</h2>
-      <p class="screen-subtitle">Your journey, one step at a time</p>
+      <p class="screen-subtitle">One at a time</p>
       <div id="steps-list" class="steps-list"></div>
     </div>
   </section>
@@ -108,13 +174,15 @@
       <div class="work-tabs" role="tablist">
         <button class="work-tab active" data-tab="phonelist" role="tab">Phone List</button>
         <button class="work-tab" data-tab="meetinglog" role="tab">Meetings</button>
+        <button class="work-tab" data-tab="resources" role="tab">Resources</button>
       </div>
 
       <div id="tab-phonelist" class="work-tab-content active" role="tabpanel">
+        <div id="sponsor-checkin-section" class="sponsor-checkin-section"></div>
         <div class="search-bar">
-          <input type="search" id="contact-search" class="input-field" placeholder="Search contacts..." aria-label="Search contacts">
+          <input type="search" id="contact-search" class="input-field" placeholder="Search..." aria-label="Search">
           <select id="contact-filter" class="input-field input-select" aria-label="Filter by role">
-            <option value="">All Roles</option>
+            <option value="">All roles</option>
             <option value="sponsor">Sponsor</option>
             <option value="support">Support Person</option>
             <option value="homegroup">Home Group</option>
@@ -124,15 +192,38 @@
         </div>
         <div id="contacts-list" class="card-list"></div>
         <div class="btn-row">
-          <button id="btn-add-contact" class="btn-primary btn-glow">+ Add Contact</button>
+          <button id="btn-add-contact" class="btn-primary btn-glow">+ Add contact</button>
           <button id="btn-import-sheets" class="btn-secondary">Import from Sheets</button>
         </div>
       </div>
 
       <div id="tab-meetinglog" class="work-tab-content" role="tabpanel">
+        <div id="meeting-streak" class="meeting-streak"></div>
         <div id="meetings-list" class="card-list"></div>
-        <button id="btn-add-meeting" class="btn-primary btn-glow">+ Log Meeting</button>
+        <button id="btn-add-meeting" class="btn-primary btn-glow">+ Log meeting</button>
       </div>
+
+      <div id="tab-resources" class="work-tab-content" role="tabpanel">
+        <div class="resource-list">
+          <a class="resource-link" href="https://www.aa.org/the-big-book" target="_blank" rel="noopener">
+            <div class="resource-link-title">Big Book Online</div>
+            <div class="resource-link-url">aa.org/the-big-book</div>
+          </a>
+          <a class="resource-link" href="https://www.aa.org/find-aa/type/find-aa-meeting" target="_blank" rel="noopener">
+            <div class="resource-link-title">Find a Meeting</div>
+            <div class="resource-link-url">aa.org/find-aa</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PATTERNS ═══ -->
+  <section id="screen-patterns" class="screen">
+    <div class="screen-content">
+      <h2 class="screen-title">Patterns</h2>
+      <p class="screen-subtitle">What keeps showing up</p>
+      <div id="patterns-content"></div>
     </div>
   </section>
 
@@ -145,7 +236,7 @@
         <h3 class="me-section-title">Sobriety</h3>
         <div id="me-sobriety-display" class="sobriety-display"></div>
         <div id="me-next-chip" class="next-chip"></div>
-        <label class="field-label">Sobriety Date
+        <label class="field-label">Sobriety date
           <input type="date" id="me-sobriety-date" class="input-field">
         </label>
       </div>
@@ -163,35 +254,58 @@
         <label class="field-label">Phone
           <input type="tel" id="me-sponsor-phone" class="input-field" placeholder="Phone number">
         </label>
-        <button id="btn-call-sponsor" class="btn-secondary" style="display:none;">Call Sponsor</button>
+        <button id="btn-call-sponsor" class="btn-secondary" style="display:none;">Call</button>
       </div>
 
       <div class="me-section">
-        <h3 class="me-section-title">Gratitude List</h3>
+        <h3 class="me-section-title">Gratitude</h3>
         <div class="gratitude-input-row">
-          <input type="text" id="gratitude-input" class="input-field" placeholder="I am grateful for...">
-          <button id="btn-add-gratitude" class="btn-primary">+</button>
+          <textarea id="gratitude-input" class="input-field" rows="3" placeholder="What are you grateful for today?"></textarea>
+          <button id="btn-add-gratitude" class="btn-primary" style="width:100%;">Add to Gratitude</button>
         </div>
         <div id="gratitude-list" class="card-list"></div>
       </div>
 
       <div class="me-section">
+        <h3 class="me-section-title">Beliefs</h3>
+        <div id="beliefs-summary"></div>
+        <button id="btn-retake-beliefs" class="btn-secondary">Take it again</button>
+      </div>
+
+      <div class="me-section">
+        <h3 class="me-section-title">Promises</h3>
+        <button id="btn-view-promises" class="btn-secondary">View comparison</button>
+      </div>
+
+      <div class="me-section">
         <h3 class="me-section-title">Settings</h3>
-        <label class="field-label">Preferred Name
+        <label class="field-label">Preferred name
           <input type="text" id="me-name" class="input-field" placeholder="What should we call you?">
         </label>
         <label class="field-label">Pronouns
-          <input type="text" id="me-pronouns" class="input-field" placeholder="e.g. they/them, she/her, he/him">
+          <input type="text" id="me-pronouns" class="input-field" placeholder="they/them, she/her, he/him">
         </label>
-        <label class="field-label">Higher Power Name
-          <input type="text" id="me-hp-name" class="input-field" placeholder="What do you call your HP?">
+        <label class="field-label">Higher Power name
+          <input type="text" id="me-hp-name" class="input-field" placeholder="Higher Power, Universe, G.O.D., whatever">
         </label>
-        <label class="field-label">Accent Color</label>
+        <label class="field-label">Accent color</label>
         <div class="accent-picker" id="accent-picker">
-          <button class="accent-btn accent-violet active" data-color="violet" aria-label="Violet"></button>
-          <button class="accent-btn accent-teal" data-color="teal" aria-label="Teal"></button>
-          <button class="accent-btn accent-gold" data-color="gold" aria-label="Gold"></button>
+          <button class="accent-btn accent-violet active" data-color="violet" aria-label="Violet" title="Violet"></button>
+          <button class="accent-btn accent-teal" data-color="teal" aria-label="Teal" title="Teal"></button>
+          <button class="accent-btn accent-gold" data-color="gold" aria-label="Gold" title="Gold"></button>
+          <button class="accent-btn accent-slate" data-color="slate" aria-label="Slate" title="Slate"></button>
+          <button class="accent-btn accent-ember" data-color="ember" aria-label="Ember" title="Ember"></button>
+          <button class="accent-btn accent-sage" data-color="sage" aria-label="Sage" title="Sage"></button>
+          <button class="accent-btn accent-ocean" data-color="ocean" aria-label="Ocean" title="Ocean"></button>
+          <button class="accent-btn accent-plum" data-color="plum" aria-label="Plum" title="Plum"></button>
+          <button class="accent-btn accent-copper" data-color="copper" aria-label="Copper" title="Copper"></button>
+          <button class="accent-btn accent-sand" data-color="sand" aria-label="Sand" title="Sand"></button>
+          <button class="accent-btn accent-midnight" data-color="midnight" aria-label="Midnight" title="Midnight"></button>
+          <button class="accent-btn accent-rose" data-color="rose" aria-label="Rose" title="Rose"></button>
+          <button class="accent-btn accent-forest" data-color="forest" aria-label="Forest" title="Forest"></button>
+          <button class="accent-btn accent-steel" data-color="steel" aria-label="Steel" title="Steel"></button>
         </div>
+        <p class="privacy-notice" style="margin-top:16px;">Everything you enter stays on your device. Nothing is ever sent anywhere.</p>
       </div>
 
       <div class="me-section">
@@ -202,6 +316,10 @@
         </div>
         <input type="file" id="import-file" accept=".json" style="display:none;">
       </div>
+
+      <footer class="app-footer">
+        <p class="privacy-notice">Everything you enter stays on your device. Nothing is ever sent anywhere.</p>
+      </footer>
     </div>
   </section>
 
@@ -214,6 +332,19 @@
       </div>
       <div class="modal-body" id="modal-body"></div>
       <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- ═══ CELEBRATION OVERLAY ═══ -->
+  <div id="celebration-overlay" class="celebration-overlay hidden" aria-hidden="true">
+    <div class="celebration-inner">
+      <div class="celebration-label" id="celebration-label"></div>
+      <div class="celebration-line" id="celebration-line"></div>
+      <div class="celebration-dismiss">tap anywhere to close</div>
+      <div class="celebration-stars">
+        <span></span><span></span><span></span><span></span><span></span>
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
     </div>
   </div>
 
@@ -247,7 +378,21 @@
         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
       </svg>
-      <span>Community</span>
+      <span>People</span>
+    </button>
+    <button class="nav-btn" data-screen="patterns" aria-label="Patterns">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="6" r="2"></circle>
+        <circle cx="18" cy="6" r="2"></circle>
+        <circle cx="12" cy="12" r="2"></circle>
+        <circle cx="6" cy="18" r="2"></circle>
+        <circle cx="18" cy="18" r="2"></circle>
+        <line x1="6" y1="6" x2="12" y2="12"></line>
+        <line x1="18" y1="6" x2="12" y2="12"></line>
+        <line x1="12" y1="12" x2="6" y2="18"></line>
+        <line x1="12" y1="12" x2="18" y2="18"></line>
+      </svg>
+      <span>Patterns</span>
     </button>
     <button class="nav-btn" data-screen="me" aria-label="Me">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -262,6 +407,9 @@
   <script src="/js/storage.js"></script>
   <script src="/js/quotes.js"></script>
   <script src="/js/pip.js"></script>
+  <script src="/js/promises.js"></script>
+  <script src="/js/beliefs.js"></script>
+  <script src="/js/patterns.js"></script>
   <script src="/js/inventory.js"></script>
   <script src="/js/fears.js"></script>
   <script src="/js/sex-inventory.js"></script>
@@ -270,10 +418,14 @@
   <script src="/js/me.js"></script>
   <script src="/js/app.js"></script>
   <script>
+    (function() { var m = document.getElementById('pip-mini'); if (m) m.remove(); })();
     if ('serviceWorker' in navigator) {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) { if (k !== 'sweepstep-v4') caches.delete(k); });
+      });
       navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('SW registered:', reg.scope))
-        .catch(err => console.warn('SW registration failed:', err));
+        .then(function(reg) { reg.update(); })
+        .catch(function(err) { console.warn('SW registration failed:', err); });
     }
   </script>
 </body>

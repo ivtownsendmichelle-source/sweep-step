@@ -1,4 +1,4 @@
-/* community.js — Phone list, Google Sheets import, meetings */
+/* community.js — Phone list, Google Sheets import, meetings, streaks, resources */
 const Community = {
   contacts: null,
   meetings: null,
@@ -13,12 +13,116 @@ const Community = {
     document.getElementById('contact-search').addEventListener('input', () => this.renderContacts());
     document.getElementById('contact-filter').addEventListener('change', () => this.renderContacts());
 
+    const callToday = document.getElementById('btn-called-today');
+    if (callToday) callToday.addEventListener('click', () => this.logSponsorCheckin());
+
     this.renderContacts();
     this.renderMeetings();
+    this.renderSponsorCheckin();
+    this.renderMeetingStreak();
   },
 
   uid() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  },
+
+  /* ═══ SPONSOR CHECK-IN STREAK ═══ */
+  computeStreak(dates) {
+    if (!dates || !dates.length) return { current: 0, last: null };
+    const sorted = [...dates].sort().reverse();
+    const last = sorted[0];
+    let current = 0;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+    const lastDate = new Date(last); lastDate.setHours(0,0,0,0);
+    // Only count if last date is today or yesterday
+    if (lastDate.getTime() !== today.getTime() && lastDate.getTime() !== yesterday.getTime()) {
+      return { current: 0, last };
+    }
+    // Count consecutive days backward
+    let cursor = new Date(lastDate);
+    const dateSet = new Set(sorted.map(d => d));
+    while (dateSet.has(cursor.toISOString().split('T')[0])) {
+      current++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return { current, last };
+  },
+
+  logSponsorCheckin() {
+    Storage.addSponsorCheckin();
+    Pip.addScore(2);
+    this.renderSponsorCheckin();
+  },
+
+  renderSponsorCheckin() {
+    const section = document.getElementById('sponsor-checkin-section');
+    if (!section) return;
+
+    const settings = Storage.getSettings();
+    const dates = Storage.getSponsorCheckins();
+    const { current, last } = this.computeStreak(dates);
+    const today = new Date().toISOString().split('T')[0];
+    const calledToday = last === today;
+
+    if (!settings.sponsorName && !settings.sponsorPhone) {
+      section.innerHTML = `
+        <p class="text-secondary">Add a sponsor or support person in the Me tab and this tracker will show up here.</p>
+      `;
+      return;
+    }
+
+    section.innerHTML = `
+      <div class="sponsor-checkin">
+        <div class="sponsor-checkin-top">
+          <div>
+            <div class="sponsor-name">${this.esc(settings.sponsorName || 'Your sponsor')}</div>
+            ${settings.sponsorPhone ? `<a class="sponsor-phone-link" href="tel:${this.esc(settings.sponsorPhone)}">${this.esc(settings.sponsorPhone)}</a>` : ''}
+          </div>
+          <button id="btn-called-today" class="${calledToday ? 'btn-secondary' : 'btn-primary'} btn-small">
+            ${calledToday ? 'Called today ✓' : 'Did you call today?'}
+          </button>
+        </div>
+        <div class="streak-row">
+          <div class="streak-count">
+            <span class="streak-num">${current}</span>
+            <span class="streak-label">day streak</span>
+          </div>
+          <div class="streak-last">
+            ${last ? `Last call: ${new Date(last + 'T00:00').toLocaleDateString()}` : 'No calls logged yet'}
+          </div>
+        </div>
+      </div>
+    `;
+    // Rebind because we replaced the button
+    const btn = document.getElementById('btn-called-today');
+    if (btn) btn.addEventListener('click', () => this.logSponsorCheckin());
+  },
+
+  /* ═══ MEETING STREAK ═══ */
+  renderMeetingStreak() {
+    const el = document.getElementById('meeting-streak');
+    if (!el) return;
+
+    const dates = this.meetings.map(m => m.date).filter(Boolean);
+    const { current, last } = this.computeStreak(dates);
+
+    if (this.meetings.length === 0) {
+      el.innerHTML = '';
+      return;
+    }
+
+    el.innerHTML = `
+      <div class="streak-row">
+        <div class="streak-count">
+          <span class="streak-num">${current}</span>
+          <span class="streak-label">day streak</span>
+        </div>
+        <div class="streak-last">
+          ${last ? `Last meeting: ${new Date(last + 'T00:00').toLocaleDateString()}` : ''}
+        </div>
+      </div>
+    `;
   },
 
   /* ═══ CONTACTS ═══ */
@@ -43,8 +147,8 @@ const Community = {
 
     if (filtered.length === 0) {
       container.innerHTML = `<div class="empty-state">
-        <p>${this.contacts.length === 0 ? 'No contacts yet.' : 'No contacts match your search.'}</p>
-        <p class="text-secondary">Add people from your recovery community. You can also import from a shared Google Sheet.</p>
+        <p>${this.contacts.length === 0 ? 'No numbers yet.' : 'Nothing matches that search.'}</p>
+        <p class="text-secondary">Get phone numbers at meetings. Put them in here. Call them before you need to.</p>
       </div>`;
       return;
     }
@@ -94,24 +198,24 @@ const Community = {
         <input type="text" id="contact-name" class="input-field" value="${this.esc(contact.name)}" placeholder="Their name">
       </label>
       <label class="field-label">Pronouns (optional)
-        <input type="text" id="contact-pronouns" class="input-field" value="${this.esc(contact.pronouns)}" placeholder="e.g. they/them, she/her">
+        <input type="text" id="contact-pronouns" class="input-field" value="${this.esc(contact.pronouns)}" placeholder="they/them, she/her, he/him">
       </label>
       <label class="field-label">Phone
         <input type="tel" id="contact-phone" class="input-field" value="${this.esc(contact.phone)}" placeholder="Phone number">
       </label>
       <label class="field-label">Role
         <select id="contact-role" class="input-field input-select">
-          <option value="">Select...</option>
+          <option value="">Pick one</option>
           ${roleOpts}
         </select>
       </label>
-      ${!isNew ? `<button class="btn-danger btn-small" style="margin-top:16px" onclick="Community.deleteContact('${contact.id}')">Delete Contact</button>` : ''}
+      ${!isNew ? `<button class="btn-danger btn-small" style="margin-top:16px" onclick="Community.deleteContact('${contact.id}')">Delete</button>` : ''}
     `;
     const footer = `
       <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
       <button class="btn-primary btn-small" onclick="Community.saveContact('${contact.id}', ${isNew})">Save</button>
     `;
-    App.openModal(isNew ? 'Add Contact' : 'Edit Contact', body, footer);
+    App.openModal(isNew ? 'Add contact' : 'Edit contact', body, footer);
   },
 
   saveContact(id, isNew) {
@@ -159,14 +263,14 @@ const Community = {
           <span class="guidance-chevron">▼</span>
         </div>
         <div class="guidance-body">
-          <p>1. Open your group's shared Google Sheet</p>
-          <p>2. Make sure it's published to the web (File > Share > Publish to web > CSV)</p>
-          <p>3. Copy the published URL and paste it below</p>
-          <p>4. The sheet should have columns: Name, Phone, Role (in that order)</p>
-          <p>Imported contacts merge with your list. Your personal contacts are never overwritten.</p>
+          <p>1. Open your group's Google Sheet.</p>
+          <p>2. Publish it to the web: File, Share, Publish to web, CSV.</p>
+          <p>3. Paste the URL below.</p>
+          <p>4. Columns: Name, Phone, Role.</p>
+          <p>Your own contacts stay put. Only the imported ones get merged.</p>
         </div>
       </div>
-      <label class="field-label">Google Sheet Published URL
+      <label class="field-label">Google Sheet published URL
         <input type="url" id="sheets-url" class="input-field" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
       </label>
       <div id="import-status" class="text-secondary" style="margin-top:8px;"></div>
@@ -175,7 +279,7 @@ const Community = {
       <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
       <button class="btn-primary btn-small" id="btn-do-import" onclick="Community.doImport()">Import</button>
     `;
-    App.openModal('Import from Google Sheets', body, footer);
+    App.openModal('Import from Sheets', body, footer);
   },
 
   async doImport() {
@@ -184,11 +288,10 @@ const Community = {
     const btn = document.getElementById('btn-do-import');
 
     if (!url) {
-      status.textContent = 'Please enter a URL.';
+      status.textContent = 'Paste a URL first.';
       return;
     }
 
-    // Convert share URL to CSV export if needed
     let csvUrl = url;
     if (url.includes('/spreadsheets/d/') && !url.includes('pub?output=csv')) {
       const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
@@ -202,24 +305,23 @@ const Community = {
 
     try {
       const response = await fetch(csvUrl);
-      if (!response.ok) throw new Error('Could not fetch sheet. Make sure it is published to the web.');
+      if (!response.ok) throw new Error('Could not reach the sheet. Make sure it is published.');
       const text = await response.text();
       const rows = this.parseCSV(text);
 
       if (rows.length < 2) {
-        status.textContent = 'Sheet appears empty or has no data rows.';
+        status.textContent = 'Sheet looks empty.';
         btn.disabled = false;
         return;
       }
 
-      // Find column indices
       const header = rows[0].map(h => h.toLowerCase().trim());
       const nameIdx = header.findIndex(h => h.includes('name'));
       const phoneIdx = header.findIndex(h => h.includes('phone') || h.includes('number'));
       const roleIdx = header.findIndex(h => h.includes('role') || h.includes('type'));
 
       if (nameIdx === -1) {
-        status.textContent = 'Could not find a "Name" column in the sheet.';
+        status.textContent = 'Could not find a Name column.';
         btn.disabled = false;
         return;
       }
@@ -246,7 +348,7 @@ const Community = {
 
       Storage.saveContacts(this.contacts);
       if (imported > 0) Pip.addScore(2);
-      status.textContent = `Imported ${imported} new contact${imported !== 1 ? 's' : ''}.`;
+      status.textContent = `Got ${imported} new contact${imported !== 1 ? 's' : ''}.`;
       this.renderContacts();
     } catch (err) {
       status.textContent = 'Error: ' + err.message;
@@ -303,13 +405,12 @@ const Community = {
     if (!container) return;
     container.innerHTML = '';
 
-    // Sort reverse chronological
     const sorted = [...this.meetings].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (sorted.length === 0) {
       container.innerHTML = `<div class="empty-state">
         <p>No meetings logged yet.</p>
-        <p class="text-secondary">Logging meetings helps track your participation and remember what resonated.</p>
+        <p class="text-secondary">Log them as you go. You'll forget what hit and what didn't if you don't write it down.</p>
       </div>`;
       return;
     }
@@ -347,20 +448,20 @@ const Community = {
       <label class="field-label">Date
         <input type="date" id="meeting-date" class="input-field" value="${meeting.date}">
       </label>
-      <label class="field-label">Group Name
-        <input type="text" id="meeting-group" class="input-field" value="${this.esc(meeting.groupName)}" placeholder="Meeting or group name">
+      <label class="field-label">Group
+        <input type="text" id="meeting-group" class="input-field" value="${this.esc(meeting.groupName)}" placeholder="Name of the group">
       </label>
       <label class="field-label">Format
         <select id="meeting-format" class="input-field input-select">
-          <option value="">Select...</option>
+          <option value="">Pick one</option>
           ${formatOpts}
         </select>
       </label>
-      <label class="field-label">Notes — what I heard, what stood out
-        <textarea id="meeting-notes" class="input-field" rows="4" placeholder="Key takeaways, things that resonated...">${this.esc(meeting.notes)}</textarea>
+      <label class="field-label">What hit. What stood out.
+        <textarea id="meeting-notes" class="input-field" rows="4" placeholder="What you want to remember">${this.esc(meeting.notes)}</textarea>
       </label>
-      <label class="field-label">What I shared or wanted to share
-        <textarea id="meeting-shared" class="input-field" rows="3" placeholder="Anything you shared or wanted to share...">${this.esc(meeting.shared)}</textarea>
+      <label class="field-label">What you shared or wanted to share
+        <textarea id="meeting-shared" class="input-field" rows="3" placeholder="Yours">${this.esc(meeting.shared)}</textarea>
       </label>
       ${!isNew ? `<button class="btn-danger btn-small" style="margin-top:16px" onclick="Community.deleteMeeting('${meeting.id}')">Delete</button>` : ''}
     `;
@@ -368,7 +469,7 @@ const Community = {
       <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
       <button class="btn-primary btn-small" onclick="Community.saveMeeting('${meeting.id}', ${isNew})">Save</button>
     `;
-    App.openModal(isNew ? 'Log Meeting' : 'Edit Meeting', body, footer);
+    App.openModal(isNew ? 'Log meeting' : 'Edit meeting', body, footer);
   },
 
   saveMeeting(id, isNew) {
@@ -392,14 +493,16 @@ const Community = {
     Storage.saveMeetings(this.meetings);
     App.closeModal();
     this.renderMeetings();
+    this.renderMeetingStreak();
   },
 
   deleteMeeting(id) {
-    if (!confirm('Remove this meeting log?')) return;
+    if (!confirm('Remove this meeting?')) return;
     this.meetings = this.meetings.filter(m => m.id !== id);
     Storage.saveMeetings(this.meetings);
     App.closeModal();
     this.renderMeetings();
+    this.renderMeetingStreak();
   },
 
   esc(str) {

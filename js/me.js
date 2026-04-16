@@ -1,31 +1,49 @@
-/* me.js — Settings, milestones, gratitude, export/import */
+/* me.js — Settings, milestones, gratitude, export/import, belief retake */
 const Me = {
   settings: null,
   gratitude: null,
+  _liveInterval: null,
 
   chipMilestones: [
     { days: 1, label: '24 Hours' },
+    { days: 7, label: '7 Days' },
     { days: 30, label: '30 Days' },
     { days: 60, label: '60 Days' },
     { days: 90, label: '90 Days' },
     { days: 183, label: '6 Months' },
     { days: 274, label: '9 Months' },
-    { days: 365, label: '1 Year' }
-    // Yearly milestones generated dynamically
+    { days: 365, label: '1 Year' },
+    { days: 548, label: '18 Months' },
+    { days: 730, label: '2 Years' },
+    { days: 1826, label: '5 Years' },
+    { days: 3653, label: '10 Years' }
   ],
+
+  milestoneLines: {
+    1: "24 hours. First chip. Don't lose it.",
+    7: "One week. You built a fence.",
+    30: "30 days. The old version is losing its grip.",
+    60: "60 days. You can feel this now.",
+    90: "90 days. They say something shifts around here. They're right.",
+    183: "6 months. Life actually looks different.",
+    274: "9 months. You've been at this longer than you thought possible.",
+    365: "One year. You kept the promise.",
+    548: "18 months. You're not counting as close anymore. That's normal.",
+    730: "2 years. Look at you.",
+    1826: "5 years. You are someone's hope now.",
+    3653: "10 years. One day at a time. All the way here."
+  },
 
   init() {
     this.settings = Storage.getSettings();
     this.gratitude = Storage.getGratitude();
 
-    // Bind settings inputs
     this.bindInput('me-name', 'name');
     this.bindInput('me-pronouns', 'pronouns');
     this.bindInput('me-hp-name', 'hpName');
     this.bindInput('me-sponsor-name', 'sponsorName');
     this.bindInput('me-sponsor-phone', 'sponsorPhone');
 
-    // Sobriety date
     const dateInput = document.getElementById('me-sobriety-date');
     if (dateInput) {
       dateInput.value = this.settings.sobrietyDate || '';
@@ -38,7 +56,7 @@ const Me = {
       });
     }
 
-    // Accent color
+    // Accent buttons (wired up by index.html using data-color attributes)
     document.querySelectorAll('.accent-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.accent-btn').forEach(b => b.classList.remove('active'));
@@ -48,16 +66,14 @@ const Me = {
         App.applyAccent(this.settings.accentColor);
       });
     });
-    // Set active accent
     document.querySelectorAll('.accent-btn').forEach(btn => {
-      if (btn.dataset.color === this.settings.accentColor) btn.classList.add('active');
-      else btn.classList.remove('active');
+      btn.classList.toggle('active', btn.dataset.color === this.settings.accentColor);
     });
 
     // Gratitude
     document.getElementById('btn-add-gratitude').addEventListener('click', () => this.addGratitude());
     document.getElementById('gratitude-input').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); this.addGratitude(); }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.addGratitude(); }
     });
 
     // Sponsor call
@@ -72,11 +88,42 @@ const Me = {
     document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
     document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
 
+    // Belief retake
+    const retakeBtn = document.getElementById('btn-retake-beliefs');
+    if (retakeBtn) retakeBtn.addEventListener('click', () => Beliefs.openRetake());
+
+    // Promises compare
+    const promisesBtn = document.getElementById('btn-view-promises');
+    if (promisesBtn) promisesBtn.addEventListener('click', () => {
+      App.openModal('The Promises', Promises.renderComparison(),
+        '<button class="btn-primary" onclick="App.closeModal()">Close</button>');
+    });
+
     this.populateInputs();
     this.renderSobriety();
     this.renderMilestones();
     this.renderGratitude();
     this.updateSponsorCallBtn();
+    this.renderBeliefSummary();
+  },
+
+  onShow() {
+    // Called every time Me tab is shown — refreshes live counter
+    this.settings = Storage.getSettings();
+    this.gratitude = Storage.getGratitude();
+    this.renderSobriety();
+    this.renderMilestones();
+    this.renderGratitude();
+    this.updateSponsorCallBtn();
+    this.renderBeliefSummary();
+    // Start 1s tick so the counter updates at midnight
+    if (this._liveInterval) clearInterval(this._liveInterval);
+    this._liveInterval = setInterval(() => this.renderSobriety(), 60000);
+  },
+
+  onHide() {
+    if (this._liveInterval) clearInterval(this._liveInterval);
+    this._liveInterval = null;
   },
 
   bindInput(elementId, settingKey) {
@@ -87,6 +134,7 @@ const Me = {
       Storage.saveSettings(this.settings);
       if (settingKey === 'sponsorPhone' || settingKey === 'sponsorName') {
         this.updateSponsorCallBtn();
+        if (typeof Community !== 'undefined') Community.renderSponsorCheckin();
       }
     });
   },
@@ -109,11 +157,10 @@ const Me = {
     const btn = document.getElementById('btn-call-sponsor');
     if (btn) {
       btn.style.display = this.settings.sponsorPhone ? 'block' : 'none';
-      btn.textContent = `Call ${this.settings.sponsorName || 'Sponsor'}`;
+      btn.textContent = `Call ${this.settings.sponsorName || 'them'}`;
     }
   },
 
-  /* ═══ SOBRIETY ═══ */
   getSobrietyDays() {
     if (!this.settings.sobrietyDate) return null;
     const start = new Date(this.settings.sobrietyDate);
@@ -130,7 +177,7 @@ const Me = {
 
     const days = this.getSobrietyDays();
     if (days === null) {
-      display.innerHTML = '<p class="text-secondary">Set your sobriety date to start tracking.</p>';
+      display.innerHTML = '<p class="text-secondary">Set your sobriety date to start the counter.</p>';
       if (nextChip) nextChip.innerHTML = '';
       return;
     }
@@ -140,37 +187,37 @@ const Me = {
     const d = days % 30;
 
     let parts = [];
-    if (years > 0) parts.push(`${years} year${years > 1 ? 's' : ''}`);
-    if (months > 0) parts.push(`${months} month${months > 1 ? 's' : ''}`);
+    if (years > 0) parts.push(`${years} year${years !== 1 ? 's' : ''}`);
+    if (months > 0) parts.push(`${months} month${months !== 1 ? 's' : ''}`);
     parts.push(`${d} day${d !== 1 ? 's' : ''}`);
 
     display.innerHTML = `
       <div class="sobriety-count">${days}</div>
-      <div class="sobriety-label">days</div>
+      <div class="sobriety-label">day${days !== 1 ? 's' : ''}</div>
       <div class="sobriety-detail">${parts.join(', ')}</div>
     `;
 
-    // Next chip
     if (nextChip) {
       const next = this.getNextMilestone(days);
       if (next) {
         const daysUntil = next.days - days;
-        nextChip.innerHTML = `Next milestone: <strong>${next.label}</strong> in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+        nextChip.innerHTML = `Next: <strong>${next.label}</strong> in ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
       } else {
         nextChip.innerHTML = '';
       }
     }
 
-    // Check for new milestones
     this.checkMilestones(days);
   },
 
   getAllMilestones(currentDays) {
     const milestones = [...this.chipMilestones];
-    // Add yearly milestones beyond year 1
     if (currentDays !== null) {
-      for (let y = 2; y <= Math.ceil(currentDays / 365) + 1; y++) {
-        milestones.push({ days: y * 365, label: `${y} Years` });
+      // Add yearly milestones from year 3 onward
+      for (let y = 3; y <= Math.ceil((currentDays || 0) / 365) + 1; y++) {
+        if (![1, 2, 5, 10].includes(y)) {
+          milestones.push({ days: y * 365, label: `${y} Years` });
+        }
       }
     }
     return milestones.sort((a, b) => a.days - b.days);
@@ -192,21 +239,26 @@ const Me = {
         pip.celebratedMilestones = celebrated;
         Storage.savePip(pip);
         Pip.celebrate();
-        this.showMilestoneCelebration(m.label);
+        this.showMilestoneCelebration(m);
       }
     });
   },
 
-  showMilestoneCelebration(label) {
-    const body = `
-      <div class="text-center" style="padding:20px;">
-        <div style="font-size:48px;margin-bottom:16px;">&#10024;</div>
-        <h3 style="font-family:var(--font-heading);font-size:24px;margin-bottom:8px;">${label}</h3>
-        <p>You're here. That matters more than you know.</p>
-        <p class="text-secondary" style="margin-top:12px;">Pip is celebrating with you.</p>
-      </div>
-    `;
-    App.openModal('Milestone Reached', body, '<button class="btn-primary" onclick="App.closeModal()">Thank you</button>');
+  showMilestoneCelebration(milestone) {
+    const line = this.milestoneLines[milestone.days] || "That's a real number. Don't lose it.";
+    const overlay = document.getElementById('celebration-overlay');
+    if (overlay) {
+      document.getElementById('celebration-label').textContent = milestone.label;
+      document.getElementById('celebration-line').textContent = line;
+      overlay.classList.remove('hidden');
+      overlay.classList.add('show');
+      const close = () => {
+        overlay.classList.remove('show');
+        setTimeout(() => overlay.classList.add('hidden'), 500);
+        overlay.removeEventListener('click', close);
+      };
+      overlay.addEventListener('click', close);
+    }
   },
 
   renderMilestones() {
@@ -216,7 +268,6 @@ const Me = {
 
     const days = this.getSobrietyDays();
     const all = this.getAllMilestones(days || 0);
-    // Show at most 12 milestones
     const toShow = all.slice(0, 12);
 
     toShow.forEach(m => {
@@ -231,7 +282,6 @@ const Me = {
     });
   },
 
-  /* ═══ GRATITUDE ═══ */
   addGratitude() {
     const input = document.getElementById('gratitude-input');
     const text = input.value.trim();
@@ -245,6 +295,20 @@ const Me = {
     Storage.saveGratitude(this.gratitude);
     input.value = '';
     Pip.addScore(3);
+
+    // 5-in-a-day acknowledgment
+    const todayKey = new Date().toDateString();
+    const todayCount = this.gratitude.filter(g =>
+      new Date(g.date).toDateString() === todayKey
+    ).length;
+    if (todayCount === 5) {
+      const list = document.getElementById('gratitude-list');
+      if (list) {
+        list.classList.add('gratitude-five-pulse');
+        setTimeout(() => list.classList.remove('gratitude-five-pulse'), 2000);
+      }
+    }
+
     this.renderGratitude();
   },
 
@@ -254,11 +318,10 @@ const Me = {
     container.innerHTML = '';
 
     if (this.gratitude.length === 0) {
-      container.innerHTML = '<div class="empty-state"><p class="text-secondary">What are you grateful for today?</p></div>';
+      container.innerHTML = '<div class="empty-state"><p class="text-secondary">Write one. Then another. Short is fine.</p></div>';
       return;
     }
 
-    // Group by date
     const groups = {};
     this.gratitude.forEach(entry => {
       const dateKey = new Date(entry.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
@@ -290,7 +353,21 @@ const Me = {
     this.renderGratitude();
   },
 
-  /* ═══ EXPORT / IMPORT ═══ */
+  renderBeliefSummary() {
+    const el = document.getElementById('beliefs-summary');
+    if (!el) return;
+    const snaps = Storage.getBeliefs();
+    if (snaps.length === 0) {
+      el.innerHTML = '<p class="text-secondary">No beliefs snapshot yet.</p>';
+      return;
+    }
+    const count = snaps.length;
+    const latest = snaps[snaps.length - 1];
+    el.innerHTML = `
+      <p class="text-secondary">${count} snapshot${count !== 1 ? 's' : ''}. Latest ${new Date(latest.date).toLocaleDateString()}.</p>
+    `;
+  },
+
   exportData() {
     const data = Storage.exportAll();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -311,12 +388,11 @@ const Me = {
       try {
         const data = JSON.parse(e.target.result);
         if (!data._appVersion) {
-          alert('This does not appear to be a Sweep Step backup file.');
+          alert('This does not look like a Sweep Step backup.');
           return;
         }
-        if (confirm('This will replace all your current data with the backup. Are you sure?')) {
+        if (confirm('This replaces everything with the backup. Are you sure?')) {
           Storage.importAll(data);
-          // Reload everything
           this.settings = Storage.getSettings();
           this.gratitude = Storage.getGratitude();
           this.populateInputs();
@@ -324,14 +400,14 @@ const Me = {
           this.renderMilestones();
           this.renderGratitude();
           this.updateSponsorCallBtn();
+          this.renderBeliefSummary();
           App.applyAccent(this.settings.accentColor);
           Pip.data = Storage.getPip();
           Pip.render();
-          Pip.renderMini();
-          alert('Backup restored successfully.');
+          alert('Restored.');
         }
       } catch (err) {
-        alert('Could not read backup file. Make sure it is a valid Sweep Step JSON export.');
+        alert('Could not read that file. Must be Sweep Step JSON.');
       }
     };
     reader.readAsText(file);

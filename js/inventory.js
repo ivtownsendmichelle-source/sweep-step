@@ -40,13 +40,13 @@ const Inventory = {
 
   _areas() {
     return [
-      { key: 'selfEsteem',        label: 'Self Esteem',         starter: 'I am...',                            fearStarter: 'Fear of being...' },
-      { key: 'pride',             label: 'Pride',               starter: 'Others should... / No one should...', fearStarter: 'Fear of being...' },
-      { key: 'ambition',          label: 'Ambition',            starter: 'I want...',                           fearStarter: 'Fear of...' },
-      { key: 'security',          label: 'Security',            starter: 'I need... to be okay',                fearStarter: 'Fear of...' },
-      { key: 'personalRelations', label: 'Personal Relations',  starter: 'This relationship should look like...', fearStarter: 'Fear of...' },
-      { key: 'sexRelations',      label: 'Sex Relations',       starter: 'A real person...',                    fearStarter: 'Fear of...' },
-      { key: 'pocketBook',        label: 'Pocket Book',         starter: 'The financial impact is...',          fearStarter: 'Fear of...' }
+      { key: 'selfEsteem',        label: 'Self Esteem',         starter: 'I am...',                                      fearStarter: 'What I am afraid of being' },
+      { key: 'pride',             label: 'Pride',               starter: 'Others should... / No one should...',          fearStarter: 'What I am afraid of being seen as' },
+      { key: 'ambition',          label: 'Ambition',            starter: 'I want...',                                    fearStarter: 'What I am afraid of' },
+      { key: 'security',          label: 'Security',            starter: 'I need... to be okay',                         fearStarter: 'What I am afraid of losing' },
+      { key: 'personalRelations', label: 'Personal Relationships', starter: 'How I think this relationship should look', fearStarter: 'What I am afraid of' },
+      { key: 'sexRelations',      label: 'Sex and Relationships', starter: 'A real person...',                           fearStarter: 'What I am afraid of' },
+      { key: 'pocketBook',        label: 'Money and Security',  starter: 'The money piece is...',                        fearStarter: 'What I am afraid of' }
     ];
   },
 
@@ -62,8 +62,8 @@ const Inventory = {
     if (!entries.length) {
       list.innerHTML =
         '<div class="empty-state">' +
-          '<p>No resentments yet. That is okay.</p>' +
-          '<p>When you are ready, tap the button below to begin your first entry. There is no rush.</p>' +
+          '<p>Nothing here yet.</p>' +
+          '<p>When you are ready, tap the button below. Start with the loudest one.</p>' +
         '</div>';
       return;
     }
@@ -129,22 +129,22 @@ const Inventory = {
     body.className = 'inventory-editor';
 
     /* — Column 1 — */
-    body.appendChild(this._section('Column 1: Who or what are you resentful at?',
-      this._guidanceBox('This can be a person, an institution, or a principle. Write the name of whoever or whatever you are resentful toward.') +
-      '<label class="input-label" for="inv-person">Person, place, or thing</label>' +
-      '<input type="text" id="inv-person" class="input-field" value="' + this._esc(entry.person) + '" placeholder="Who or what...">'
+    body.appendChild(this._section('Column 1. Who or what.',
+      this._guidanceBox('A person. A place. An institution. A principle. Whatever you are resentful at. Write the name.') +
+      '<label class="input-label" for="inv-person">Name</label>' +
+      '<input type="text" id="inv-person" class="input-field" value="' + this._esc(entry.person) + '" placeholder="Who or what">'
     ));
 
     /* — Column 2 — */
-    body.appendChild(this._section('Column 2: What is the cause?',
-      this._guidanceBox('List each reason for your resentment, one at a time. Be specific about what happened or what this person or thing did.') +
+    body.appendChild(this._section('Column 2. The cause.',
+      this._guidanceBox('What did they do. Be specific. One cause per line. Do not combine them. If there are five, write five.') +
       '<div id="inv-causes"></div>' +
       '<button type="button" class="btn-secondary btn-sm" id="btn-add-cause">+ Add another cause</button>'
     ));
 
     /* — Column 3 — */
-    body.appendChild(this._section('Column 3: How does it affect me?',
-      this._guidanceBox('For each cause, explore how it affects seven areas of your life. Be honest. Not every area will apply to every cause — leave blank what does not fit.') +
+    body.appendChild(this._section('Column 3. What it touches.',
+      this._guidanceBox('For each cause, look at which parts of you got hit. Not every area applies every time. Leave blank what does not fit. Be honest about the ones that do.') +
       '<div id="inv-col3"></div>'
     ));
 
@@ -153,21 +153,21 @@ const Inventory = {
     const hp = settings.hpName || 'Higher Power';
     const personName = entry.person || '___';
 
-    const col4Section = this._section('Column 4: My Part',
+    const col4Section = this._section('Column 4. My part.',
       '<div class="realization-box">' +
-        '<p class="realization-prompt"><strong>The Realization:</strong> Before writing your part, consider: How have I done the things I resented in Column 2 to the person in Column 1 or to others?</p>' +
-        '<p class="realization-prayer"><em>' + this._esc(hp) + ', help me see the truth about my resentment toward ' + this._esc(personName) + '. Help me see where I have been selfish, dishonest, self-seeking, and afraid. Show me where I was at fault, and help me be willing to let go.</em></p>' +
+        '<p class="realization-prompt"><strong>Before you write this:</strong> where have I done the same things I resent in Column 2 to this person, or to anybody else? That is the question. Sit with it for a minute.</p>' +
+        '<p class="realization-prayer"><em>' + this._esc(hp) + ', show me my part. Where was I selfish. Where was I dishonest. Where was I self-seeking. Where was I afraid. Help me see it clean. Help me be willing to let it go.</em></p>' +
       '</div>' +
-      '<label class="input-label">Self-Seeking: My self-seeking actions were...</label>' +
-      '<textarea class="input-field" id="inv-c4-selfSeeking" rows="3" placeholder="My self-seeking actions were...">' + this._esc(entry.column4.selfSeeking) + '</textarea>' +
-      '<label class="input-label">Selfish: My selfish attitudes were...</label>' +
-      '<textarea class="input-field" id="inv-c4-selfish" rows="3" placeholder="My selfish attitudes were...">' + this._esc(entry.column4.selfish) + '</textarea>' +
-      '<label class="input-label">Dishonest: I was in the delusion that...</label>' +
-      '<textarea class="input-field" id="inv-c4-dishonest" rows="3" placeholder="I was in the delusion that...">' + this._esc(entry.column4.dishonest) + '</textarea>' +
-      '<label class="input-label">Afraid: I was afraid...</label>' +
-      '<textarea class="input-field" id="inv-c4-afraid" rows="3" placeholder="I was afraid...">' + this._esc(entry.column4.afraid) + '</textarea>' +
-      '<label class="input-label">Harm: The harm I caused was...</label>' +
-      '<textarea class="input-field" id="inv-c4-harm" rows="3" placeholder="The harm I caused was...">' + this._esc(entry.column4.harm) + '</textarea>'
+      '<label class="input-label">Self-seeking. Where were you working an angle.</label>' +
+      '<textarea class="input-field" id="inv-c4-selfSeeking" rows="3" placeholder="I was working an angle when...">' + this._esc(entry.column4.selfSeeking) + '</textarea>' +
+      '<label class="input-label">Selfish. What was only about you.</label>' +
+      '<textarea class="input-field" id="inv-c4-selfish" rows="3" placeholder="I was thinking only about myself when...">' + this._esc(entry.column4.selfish) + '</textarea>' +
+      '<label class="input-label">Dishonest. What you were pretending not to know.</label>' +
+      '<textarea class="input-field" id="inv-c4-dishonest" rows="3" placeholder="The lie I was telling myself was...">' + this._esc(entry.column4.dishonest) + '</textarea>' +
+      '<label class="input-label">Afraid. What you were actually scared of underneath.</label>' +
+      '<textarea class="input-field" id="inv-c4-afraid" rows="3" placeholder="I was afraid that...">' + this._esc(entry.column4.afraid) + '</textarea>' +
+      '<label class="input-label">Harm. What you did to them or to yourself.</label>' +
+      '<textarea class="input-field" id="inv-c4-harm" rows="3" placeholder="What I did was...">' + this._esc(entry.column4.harm) + '</textarea>'
     );
     col4Section.id = 'inv-col4-section';
     body.appendChild(col4Section);
@@ -223,7 +223,7 @@ const Inventory = {
       row.className = 'cause-row';
       row.innerHTML =
         '<span class="cause-letter">' + letter + '</span>' +
-        '<input type="text" class="input-field cause-input" data-cidx="' + i + '" value="' + this._esc(cause.text) + '" placeholder="What happened...">' +
+        '<input type="text" class="input-field cause-input" data-cidx="' + i + '" value="' + this._esc(cause.text) + '" placeholder="What they did">' +
         (causes.length > 1
           ? '<button type="button" class="btn-icon btn-delete-cause" data-cidx="' + i + '" aria-label="Remove cause ' + letter + '">&times;</button>'
           : '');
@@ -252,7 +252,7 @@ const Inventory = {
     wrap.innerHTML = '';
 
     if (!causes.length) {
-      wrap.innerHTML = '<p class="muted">Add at least one cause in Column 2 first.</p>';
+      wrap.innerHTML = '<p class="muted">Add a cause in Column 2 first. Then come back here.</p>';
       return;
     }
 
@@ -373,7 +373,10 @@ const Inventory = {
     if (entry.causes.some(c => areas.some(a => c[a.key] && c[a.key].statement.trim()))) points += 10;
     const c4 = entry.column4;
     if (c4.selfSeeking.trim() || c4.selfish.trim() || c4.dishonest.trim() || c4.afraid.trim() || c4.harm.trim()) points += 10;
-    if (points > 0 && typeof Pip !== 'undefined') Pip.addScore(points);
+    if (points > 0 && typeof Pip !== 'undefined') {
+      Pip.addScore(points);
+      if (isNew) Pip.showNote(Pip.getResponse('resentment'));
+    }
 
     this.render();
     this._closeModal();
@@ -382,7 +385,7 @@ const Inventory = {
   /* ── Delete ────────────────────────────────────────────── */
 
   delete(id) {
-    if (!confirm('Delete this resentment entry? This cannot be undone.')) return;
+    if (!confirm('Delete this entry? No undo.')) return;
     const all = Storage.getInventory().filter(e => e.id !== id);
     Storage.saveInventory(all);
     this.render();

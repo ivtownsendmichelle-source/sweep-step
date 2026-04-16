@@ -70,8 +70,8 @@ const Fears = {
     const allFears = this.getAllFears();
     if (allFears.length === 0) {
       container.innerHTML = `<div class="empty-state">
-        <p>No fears recorded yet.</p>
-        <p class="text-secondary">Fears will appear here automatically from your inventory work, or you can add them manually.</p>
+        <p>Nothing here yet.</p>
+        <p class="text-secondary">Fears land here automatically as you fill in your inventory. Or add one by hand.</p>
       </div>`;
       return;
     }
@@ -95,15 +95,15 @@ const Fears = {
 
   openAddModal() {
     const body = `
-      <label class="field-label">What are you afraid of?
-        <textarea id="fear-text" class="input-field" rows="3" placeholder="Describe your fear..."></textarea>
+      <label class="field-label">What are you afraid of
+        <textarea id="fear-text" class="input-field" rows="3" placeholder="Write it plainly"></textarea>
       </label>
     `;
     const footer = `
       <button class="btn-secondary" onclick="App.closeModal()">Cancel</button>
       <button class="btn-primary btn-small" onclick="Fears.saveNew()">Save</button>
     `;
-    App.openModal('Add a Fear', body, footer);
+    App.openModal('Add a fear', body, footer);
   },
 
   saveNew() {
@@ -119,12 +119,13 @@ const Fears = {
     });
     Storage.saveFears(this.data);
     Pip.addScore(3);
+    Pip.showNote(Pip.getResponse('fear'));
     App.closeModal();
     this.render();
   },
 
   delete(id) {
-    if (!confirm('Remove this fear from your list?')) return;
+    if (!confirm('Remove this fear?')) return;
     this.data.manual = (this.data.manual || []).filter(f => f.id !== id);
     delete this.data.chains[id];
     Storage.saveFears(this.data);
@@ -154,11 +155,11 @@ const Fears = {
     const body = `
       <div class="guidance-box">
         <div class="guidance-header" onclick="this.parentElement.classList.toggle('open')">
-          <span>How fear chaining works</span>
+          <span>How this works</span>
           <span class="guidance-chevron">▼</span>
         </div>
         <div class="guidance-body">
-          <p>Start with your fear, then ask "Why do I have this fear?" For each answer, ask "Why?" again. Keep going until your fears converge to a root — often a core belief about yourself or the world.</p>
+          <p>Start with the fear. Ask yourself why. Write the answer. Then ask why again. Keep going. Your fears will land on a small number of roots. Usually the same few.</p>
         </div>
       </div>
       <div class="realization-box">
@@ -167,10 +168,10 @@ const Fears = {
       <div class="fear-chain" id="fear-chain-container">
         ${chainHTML}
       </div>
-      <button class="btn-secondary btn-small" onclick="Fears.addChainLink('${fearId}')">+ Ask "Why?" again</button>
+      <button class="btn-secondary btn-small" onclick="Fears.addChainLink('${fearId}')">+ Ask why again</button>
       <div style="margin-top:20px">
-        <label class="field-label">What harm has this fear caused?
-          <textarea id="fear-harm-input" class="input-field" rows="3" placeholder="How has this fear affected your life and others?">${this.esc((this.data.chainHarms && this.data.chainHarms[fearId]) || '')}</textarea>
+        <label class="field-label">What has this fear cost you
+          <textarea id="fear-harm-input" class="input-field" rows="3" placeholder="What it has cost you and the people around you">${this.esc((this.data.chainHarms && this.data.chainHarms[fearId]) || '')}</textarea>
         </label>
       </div>
     `;
@@ -219,6 +220,7 @@ const Fears = {
 
     Storage.saveFears(this.data);
     Pip.addScore(5);
+    Pip.showNote(Pip.getResponse('fear'));
     App.closeModal();
     this.render();
   },
