@@ -6,6 +6,9 @@ const App = {
   _pinFirst: '',
   _pinAttempts: 0,
   _pinLockUntil: 0,
+  _hiddenAt: 0,
+  _lockThresholdMs: 5 * 60 * 1000, // 5 minutes in background triggers re-lock
+  _visibilityBound: false,
 
   init() {
     const settings = Storage.getSettings();
@@ -18,6 +21,19 @@ const App = {
 
     this.applyAccent(settings.accentColor);
 
+    // Bind visibilitychange exactly once. This handles both tab-switching
+    // and the PWA being backgrounded on mobile (OS pauses the page rather
+    // than reloading it, so DOMContentLoaded never fires again).
+    if (!this._visibilityBound) {
+      this._visibilityBound = true;
+      document.addEventListener('visibilitychange', () => this._handleVisibility());
+      window.addEventListener('pageshow', (e) => {
+        // pageshow fires when page is restored from bfcache (iOS Safari).
+        // Treat bfcache restore as "returned from background" too.
+        if (e.persisted) this._checkRelock(true);
+      });
+    }
+
     if (!settings.onboardingComplete) {
       this._showOnboarding();
       return;
@@ -27,6 +43,33 @@ const App = {
       return;
     }
     this._bootApp();
+  },
+
+  /* Called on visibilitychange. Tracks when the page goes hidden,
+     and on return checks the 5-minute threshold. */
+  _handleVisibility() {
+    if (document.visibilityState === 'hidden') {
+      this._hiddenAt = Date.now();
+    } else if (document.visibilityState === 'visible') {
+      this._checkRelock(false);
+    }
+  },
+
+  /* If a PIN is set and enough time has passed (or force=true),
+     show the PIN gate again. */
+  _checkRelock(force) {
+    const settings = Storage.getSettings();
+    if (!settings.onboardingComplete) return;
+    if (!settings.pinHash) return; // PIN was skipped — never re-lock
+
+    // Already on the PIN screen? Don't re-trigger.
+    const pinScreen = document.getElementById('screen-pin');
+    if (pinScreen && pinScreen.classList.contains('active')) return;
+
+    const gone = Date.now() - (this._hiddenAt || 0);
+    if (force || gone >= this._lockThresholdMs) {
+      this._showPin('enter');
+    }
   },
 
   _bootApp() {
@@ -279,7 +322,10 @@ const App = {
   _showPin(mode) {
     this._pinMode = mode;
     this._pinEntry = '';
-    this._pinFirst = '';
+    // Only clear the stored first PIN when we're NOT entering confirm mode.
+    // In confirm mode _pinFirst holds the PIN the user just typed and must
+    // be preserved so the comparison in _submitPin actually works.
+    if (mode !== 'confirm') this._pinFirst = '';
 
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById('screen-pin').classList.add('active');
